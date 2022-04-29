@@ -1,4 +1,5 @@
 {
   "files.autoSave": "afterDelay",
-  "editor.formatOnType": true
+  "editor.formatOnType": true,
+  "cSpell.words": ["macroquad", "platformer"]
 }
