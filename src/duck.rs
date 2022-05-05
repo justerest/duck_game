@@ -96,7 +96,7 @@ impl<'a> DuckUpdateAction<'a> {
     fn handle_gravity(&mut self) {
         if self.is_on_ground() {
             self.duck.velocity.y = Velocity::ZERO;
-        } else if self.is_top_at_barrier() {
+        } else if self.is_top_at_solid() {
             self.duck.velocity.y = -self.duck.velocity.y / 2.0;
         } else {
             let dv = GRAVITY_ACCELERATION * self.frame_time;
@@ -113,7 +113,7 @@ impl<'a> DuckUpdateAction<'a> {
         self.duck.velocity.y < Velocity::ZERO
     }
 
-    fn is_top_at_barrier(&self) -> bool {
+    fn is_top_at_solid(&self) -> bool {
         let pos = self.world.actor_pos(self.duck.collider) - vec2(0.0, 1.0);
         self.world.collide_check(self.duck.collider, pos) && self.is_solid_at(pos)
     }
@@ -141,10 +141,10 @@ impl<'a> DuckUpdateAction<'a> {
     }
 
     fn handle_jump(&mut self) {
-        if self.is_jump_down() {
+        if self.is_descent() {
             self.world.descent(self.duck.collider);
             self.duck.velocity.y = 2.0 * GRAVITY_ACCELERATION * self.frame_time;
-        } else if self.is_jump_from_ground() {
+        } else if self.is_jump_start() {
             self.duck.velocity.y = -jump_velocity();
         } else if self.is_jump_end() {
             self.duck.velocity.y += ADDITIONAL_GRAVITY_ACCELERATION * self.frame_time;
@@ -153,11 +153,11 @@ impl<'a> DuckUpdateAction<'a> {
         }
     }
 
-    fn is_jump_down(&self) -> bool {
+    fn is_descent(&self) -> bool {
         is_key_down(KeyCode::Down) && is_key_pressed(KeyCode::Space) && self.is_on_ground()
     }
 
-    fn is_jump_from_ground(&self) -> bool {
+    fn is_jump_start(&self) -> bool {
         is_key_pressed(KeyCode::Space) && self.is_on_ground()
     }
 
