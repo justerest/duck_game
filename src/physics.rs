@@ -1,13 +1,13 @@
 pub use self::acceleration::*;
 pub use self::length::*;
-pub use self::speed::*;
+pub use self::velocity::*;
 
 pub const EARTH_G: Acceleration = Acceleration::from_meters_on_second_on_second(9.8);
 
 mod acceleration {
     use std::time::Duration;
 
-    use super::speed::Speed;
+    use super::velocity::Velocity;
 
     pub struct Acceleration {
         meters_on_second_on_second: f32,
@@ -26,15 +26,15 @@ mod acceleration {
     }
 
     impl std::ops::Mul<Acceleration> for Duration {
-        type Output = Speed;
+        type Output = Velocity;
 
         fn mul(self, rhs: Acceleration) -> Self::Output {
-            Speed::from_meters_on_second(self.as_secs_f32() * rhs.meters_on_second_on_second)
+            Velocity::from_meters_on_second(self.as_secs_f32() * rhs.meters_on_second_on_second)
         }
     }
 
     impl std::ops::Mul<Duration> for Acceleration {
-        type Output = Speed;
+        type Output = Velocity;
 
         fn mul(self, rhs: Duration) -> Self::Output {
             rhs * self
@@ -50,13 +50,13 @@ mod acceleration {
     }
 }
 
-mod speed {
+mod velocity {
     #[derive(Default, Clone, Copy, PartialEq, PartialOrd)]
-    pub struct Speed {
+    pub struct Velocity {
         meters_on_second: f32,
     }
 
-    impl Speed {
+    impl Velocity {
         pub const ZERO: Self = Self::from_meters_on_second(0.0);
 
         pub const fn from_meters_on_second(val: f32) -> Self {
@@ -86,17 +86,17 @@ mod speed {
         use std::time::Duration;
 
         use super::super::Length;
-        use super::Speed;
+        use super::Velocity;
 
-        impl std::ops::Mul<Speed> for Duration {
+        impl std::ops::Mul<Velocity> for Duration {
             type Output = Length;
 
-            fn mul(self, rhs: Speed) -> Self::Output {
+            fn mul(self, rhs: Velocity) -> Self::Output {
                 Length::from_meters(self.as_secs_f32() * rhs.meters_on_second)
             }
         }
 
-        impl std::ops::Mul<Duration> for Speed {
+        impl std::ops::Mul<Duration> for Velocity {
             type Output = Length;
 
             fn mul(self, rhs: Duration) -> Self::Output {
@@ -104,40 +104,46 @@ mod speed {
             }
         }
 
-        impl std::ops::Add for Speed {
-            type Output = Speed;
+        impl std::ops::Add for Velocity {
+            type Output = Velocity;
 
-            fn add(self, rhs: Speed) -> Self::Output {
-                Speed::from_meters_on_second(self.meters_on_second + rhs.meters_on_second)
+            fn add(self, rhs: Velocity) -> Self::Output {
+                Velocity::from_meters_on_second(self.meters_on_second + rhs.meters_on_second)
             }
         }
 
-        impl std::ops::Sub for Speed {
-            type Output = Speed;
-
-            fn sub(self, rhs: Speed) -> Self::Output {
-                Speed::from_meters_on_second(self.meters_on_second - rhs.meters_on_second)
+        impl std::ops::AddAssign for Velocity {
+            fn add_assign(&mut self, rhs: Self) {
+                *self = *self + rhs;
             }
         }
 
-        impl std::ops::Neg for Speed {
-            type Output = Speed;
+        impl std::ops::Sub for Velocity {
+            type Output = Velocity;
+
+            fn sub(self, rhs: Velocity) -> Self::Output {
+                Velocity::from_meters_on_second(self.meters_on_second - rhs.meters_on_second)
+            }
+        }
+
+        impl std::ops::Neg for Velocity {
+            type Output = Velocity;
 
             fn neg(self) -> Self::Output {
-                Speed::from_meters_on_second(-self.meters_on_second)
+                Velocity::from_meters_on_second(-self.meters_on_second)
             }
         }
 
-        impl std::ops::Mul<Speed> for f32 {
-            type Output = Speed;
+        impl std::ops::Mul<Velocity> for f32 {
+            type Output = Velocity;
 
-            fn mul(self, rhs: Speed) -> Self::Output {
-                Speed::from_meters_on_second(self * rhs.meters_on_second)
+            fn mul(self, rhs: Velocity) -> Self::Output {
+                Velocity::from_meters_on_second(self * rhs.meters_on_second)
             }
         }
 
-        impl std::ops::Div<f32> for Speed {
-            type Output = Speed;
+        impl std::ops::Div<f32> for Velocity {
+            type Output = Velocity;
 
             fn div(self, rhs: f32) -> Self::Output {
                 Self::from_meters_on_second(self.meters_on_second / rhs)

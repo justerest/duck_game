@@ -19,7 +19,7 @@ impl FollowBuffer {
         }
     }
 
-    pub fn add(&mut self, val: f32) {
+    pub fn push(&mut self, val: f32) {
         self.list.push_back(val);
         if self.list.len() > self.capacity {
             self.list.pop_front();
@@ -57,9 +57,9 @@ impl Camera {
     pub fn add_hero_pos(&mut self, pos: Vec2) {
         self.hero_pos = pos;
         if self.x_follow_buffer.last() != Some(pos.x) {
-            self.x_follow_buffer.add(pos.x)
+            self.x_follow_buffer.push(pos.x)
         }
-        self.y_follow_buffer.add(pos.y);
+        self.y_follow_buffer.push(pos.y);
     }
 
     pub fn focus_on_hero(&self) {

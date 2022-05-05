@@ -6,11 +6,12 @@ use macroquad_platformer::{Actor, World};
 use crate::physics::*;
 
 pub const MAX_JUMP_HEIGHT: Length = Length::from_meters(1.6);
-pub const HOVER_SPEED: Speed = Speed::from_meters_on_second(1.6);
+pub const HOVER_VELOCITY: Velocity = Velocity::from_meters_on_second(1.6);
 pub const GRAVITY_ACCELERATION: Acceleration =
     Acceleration::from_meters_on_second_on_second(2.0 * EARTH_G.as_meters_on_second_on_second());
-pub const MAX_FALL_SPEED: Speed = Speed::from_meters_on_second(10.0);
-pub const MAX_MOVE_SPEED: Speed = Speed::from_meters_on_second(3.2);
+pub const ADDITIONAL_GRAVITY_ACCELERATION: Acceleration = EARTH_G;
+pub const MAX_FALL_VELOCITY: Velocity = Velocity::from_meters_on_second(10.0);
+pub const MAX_MOVE_VELOCITY: Velocity = Velocity::from_meters_on_second(3.2);
 pub const MOVE_ACCELERATION: Acceleration = Acceleration::from_meters_on_second_on_second(12.0);
 pub const MOVE_DECELERATION: Acceleration = Acceleration::from_meters_on_second_on_second(6.0);
 
@@ -23,7 +24,7 @@ enum Direction {
 pub struct Duck {
     texture: Texture2D,
     collider: Actor,
-    speed: XY<Speed>,
+    velocity: XY<Velocity>,
     dir: Direction,
 }
 
@@ -32,7 +33,7 @@ impl Duck {
         Self {
             texture,
             collider: world.add_actor(init_pos, texture.width() as i32, texture.height() as i32),
-            speed: Default::default(),
+            velocity: Default::default(),
             dir: Direction::Right,
         }
     }
@@ -87,60 +88,83 @@ impl<'a> DuckUpdateAction<'a> {
 
     pub fn apply(mut self) {
         self.handle_gravity();
-        self.handle_key_events();
-        self.update_move();
+        self.handle_move();
+        self.handle_jump();
+        self.update_position();
     }
 
     fn handle_gravity(&mut self) {
         if self.is_on_ground() {
-            self.duck.speed.y = Speed::from_meters_on_second(0.0);
+            self.duck.velocity.y = Velocity::ZERO;
         } else if self.is_top_at_barrier() {
-            self.duck.speed.y = -self.duck.speed.y / 2.0;
+            self.duck.velocity.y = -self.duck.velocity.y / 2.0;
         } else {
             let dv = GRAVITY_ACCELERATION * self.frame_time;
-            self.duck.speed.y = (self.duck.speed.y + dv).min(MAX_FALL_SPEED);
+            self.duck.velocity.y = (self.duck.velocity.y + dv).min(MAX_FALL_VELOCITY);
         }
     }
 
     fn is_on_ground(&self) -> bool {
         let actor_pos = self.world.actor_pos(self.duck.collider) + vec2(0.0, 1.0);
-        let is_move_up = self.duck.speed.y < Speed::ZERO;
+        let is_move_up = self.duck.velocity.y < Velocity::ZERO;
         self.world.collide_check(self.duck.collider, actor_pos) && !is_move_up
     }
 
     fn is_top_at_barrier(&self) -> bool {
         let actor_pos = self.world.actor_pos(self.duck.collider) + vec2(0.0, -1.0);
-        let is_move_down = self.duck.speed.y > Speed::ZERO;
+        let is_move_down = self.duck.velocity.y > Velocity::ZERO;
         self.world.collide_check(self.duck.collider, actor_pos) && !is_move_down
     }
 
-    fn handle_key_events(&mut self) {
+    fn handle_move(&mut self) {
         if is_key_down(KeyCode::Right) {
             let dv = MOVE_ACCELERATION * self.frame_time;
-            self.duck.speed.x = (self.duck.speed.x + dv).min(MAX_MOVE_SPEED);
+            self.duck.velocity.x = (self.duck.velocity.x + dv).min(MAX_MOVE_VELOCITY);
             self.duck.dir = Direction::Right;
         } else if is_key_down(KeyCode::Left) {
             let dv = MOVE_ACCELERATION * self.frame_time;
-            self.duck.speed.x = (self.duck.speed.x - dv).max(-MAX_MOVE_SPEED);
+            self.duck.velocity.x = (self.duck.velocity.x - dv).max(-MAX_MOVE_VELOCITY);
             self.duck.dir = Direction::Left;
         } else {
             let dv = MOVE_DECELERATION * self.frame_time;
-            self.duck.speed.x =
-                self.duck.speed.x.signum() * (self.duck.speed.x.abs() - dv).max(Speed::ZERO);
-        }
-
-        if is_key_pressed(KeyCode::Space) && self.is_on_ground() {
-            self.duck.speed.y = -jump_speed();
-        }
-
-        if is_key_down(KeyCode::Space) && !self.is_on_ground() {
-            self.duck.speed.y = self.duck.speed.y.min(HOVER_SPEED);
+            self.duck.velocity.x = self.duck.velocity.x.signum()
+                * (self.duck.velocity.x.abs() - dv).max(Velocity::ZERO);
         }
     }
 
-    fn update_move(&mut self) {
-        let dx = self.duck.speed.x * self.frame_time;
-        let dy = self.duck.speed.y * self.frame_time;
+    fn handle_jump(&mut self) {
+        if self.is_jump_from_ground() {
+            self.duck.velocity.y = -jump_velocity();
+        }
+
+        if self.is_jump_end() {
+            self.duck.velocity.y += ADDITIONAL_GRAVITY_ACCELERATION * self.frame_time;
+        }
+
+        if self.is_hover() {
+            self.duck.velocity.y = self.duck.velocity.y.min(HOVER_VELOCITY);
+        }
+    }
+
+    fn is_jump_from_ground(&self) -> bool {
+        is_key_pressed(KeyCode::Space) && self.is_on_ground()
+    }
+
+    fn is_jump_end(&self) -> bool {
+        !is_key_down(KeyCode::Space) && self.is_jump()
+    }
+
+    fn is_jump(&self) -> bool {
+        self.duck.velocity.y < Velocity::ZERO
+    }
+
+    fn is_hover(&self) -> bool {
+        is_key_down(KeyCode::Space) && !self.is_on_ground()
+    }
+
+    fn update_position(&mut self) {
+        let dx = self.duck.velocity.x * self.frame_time;
+        let dy = self.duck.velocity.y * self.frame_time;
         self.world.move_h(self.duck.collider, dx.as_cm());
         self.world.move_v(self.duck.collider, dy.as_cm());
     }
@@ -148,8 +172,8 @@ impl<'a> DuckUpdateAction<'a> {
 
 // mv^2/2 = mgh
 // v = sqrt(2gh)
-fn jump_speed() -> Speed {
+fn jump_velocity() -> Velocity {
     let g = GRAVITY_ACCELERATION.as_meters_on_second_on_second();
     let h = MAX_JUMP_HEIGHT.as_meters();
-    Speed::from_meters_on_second((2.0 * g * h).sqrt())
+    Velocity::from_meters_on_second((2.0 * g * h).sqrt())
 }
