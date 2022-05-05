@@ -31,7 +31,7 @@ impl FollowBuffer {
     }
 
     pub fn last(&self) -> Option<f32> {
-        self.list.front().cloned()
+        self.list.back().cloned()
     }
 }
 

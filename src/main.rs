@@ -10,6 +10,7 @@ use crate::tiled_map::TiledMap;
 mod camera;
 mod duck;
 mod duck_world;
+mod physics;
 mod tiled_map;
 
 mod tile_layers {
