@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use macroquad::prelude::*;
-use macroquad_platformer::{Actor, World};
+use macroquad_platformer::{Actor, Tile, World};
 
 use crate::physics::*;
 
@@ -114,8 +114,14 @@ impl<'a> DuckUpdateAction<'a> {
     }
 
     fn is_top_at_barrier(&self) -> bool {
-        let actor_pos = self.world.actor_pos(self.duck.collider) + vec2(0.0, -1.0);
-        self.world.collide_check(self.duck.collider, actor_pos) && self.is_moving_up()
+        let pos = self.world.actor_pos(self.duck.collider) - vec2(0.0, 1.0);
+        self.world.collide_check(self.duck.collider, pos) && self.is_solid_at(pos)
+    }
+
+    fn is_solid_at(&self, pos: Vec2) -> bool {
+        let width = self.duck.texture.width();
+        let height = self.duck.texture.height();
+        self.world.collide_solids(pos, width as _, height as _) == Tile::Solid
     }
 
     fn handle_move(&mut self) {
