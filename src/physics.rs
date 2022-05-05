@@ -65,6 +65,10 @@ mod velocity {
             }
         }
 
+        pub fn as_meters_on_second(&self) -> f32 {
+            self.meters_on_second
+        }
+
         pub fn min(&self, max: Self) -> Self {
             Self::from_meters_on_second(self.meters_on_second.min(max.meters_on_second))
         }
@@ -167,7 +171,7 @@ mod length {
         }
 
         pub fn as_cm(&self) -> f32 {
-            100. * self.meters
+            100.0 * self.meters
         }
     }
 }

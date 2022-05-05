@@ -106,14 +106,16 @@ impl<'a> DuckUpdateAction<'a> {
 
     fn is_on_ground(&self) -> bool {
         let actor_pos = self.world.actor_pos(self.duck.collider) + vec2(0.0, 1.0);
-        let is_move_up = self.duck.velocity.y < Velocity::ZERO;
-        self.world.collide_check(self.duck.collider, actor_pos) && !is_move_up
+        self.world.collide_check(self.duck.collider, actor_pos) && !self.is_moving_up()
+    }
+
+    fn is_moving_up(&self) -> bool {
+        self.duck.velocity.y < Velocity::ZERO
     }
 
     fn is_top_at_barrier(&self) -> bool {
         let actor_pos = self.world.actor_pos(self.duck.collider) + vec2(0.0, -1.0);
-        let is_move_down = self.duck.velocity.y > Velocity::ZERO;
-        self.world.collide_check(self.duck.collider, actor_pos) && !is_move_down
+        self.world.collide_check(self.duck.collider, actor_pos) && self.is_moving_up()
     }
 
     fn handle_move(&mut self) {
@@ -133,17 +135,20 @@ impl<'a> DuckUpdateAction<'a> {
     }
 
     fn handle_jump(&mut self) {
-        if self.is_jump_from_ground() {
+        if self.is_jump_down() {
+            self.world.descent(self.duck.collider);
+            self.duck.velocity.y = 2.0 * GRAVITY_ACCELERATION * self.frame_time;
+        } else if self.is_jump_from_ground() {
             self.duck.velocity.y = -jump_velocity();
-        }
-
-        if self.is_jump_end() {
+        } else if self.is_jump_end() {
             self.duck.velocity.y += ADDITIONAL_GRAVITY_ACCELERATION * self.frame_time;
-        }
-
-        if self.is_hover() {
+        } else if self.is_hover() {
             self.duck.velocity.y = self.duck.velocity.y.min(HOVER_VELOCITY);
         }
+    }
+
+    fn is_jump_down(&self) -> bool {
+        is_key_down(KeyCode::Down) && is_key_pressed(KeyCode::Space) && self.is_on_ground()
     }
 
     fn is_jump_from_ground(&self) -> bool {
@@ -151,15 +156,11 @@ impl<'a> DuckUpdateAction<'a> {
     }
 
     fn is_jump_end(&self) -> bool {
-        !is_key_down(KeyCode::Space) && self.is_jump()
-    }
-
-    fn is_jump(&self) -> bool {
-        self.duck.velocity.y < Velocity::ZERO
+        !is_key_down(KeyCode::Space) && self.duck.velocity.y < Velocity::ZERO
     }
 
     fn is_hover(&self) -> bool {
-        is_key_down(KeyCode::Space) && !self.is_on_ground()
+        is_key_down(KeyCode::Space) && self.duck.velocity.y > Velocity::ZERO
     }
 
     fn update_position(&mut self) {
