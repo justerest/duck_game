@@ -60,13 +60,13 @@ async fn main() {
 
         clear_background(BLACK);
 
+        duck.update(&mut world);
+
         camera.add_hero_pos(duck.center(&world));
         camera.focus_on_hero();
 
-        world.draw();
+        world.draw(camera.viewport());
         duck.draw(&world);
-
-        duck.update(&mut world);
 
         next_frame().await;
     }

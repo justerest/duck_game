@@ -1,3 +1,4 @@
+use macroquad::prelude::Rect;
 use macroquad_platformer::{Tile, World};
 
 use crate::tiled_map::TiledMap;
@@ -29,8 +30,8 @@ impl DuckWorld {
         }
     }
 
-    pub fn draw(&self) {
-        self.map.draw_all_layers()
+    pub fn draw(&self, dest: Rect) {
+        self.map.draw_all_layers(dest);
     }
 
     pub fn add_static_colliders(&mut self, layer: &str, collider_type: Tile) {

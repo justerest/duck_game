@@ -72,14 +72,18 @@ struct DuckUpdateAction<'a> {
     duck: &'a mut Duck,
     world: &'a mut World,
     frame_time: Duration,
+    is_on_ground: bool,
 }
 
 impl<'a> DuckUpdateAction<'a> {
     fn new(duck: &'a mut Duck, world: &'a mut World) -> Self {
+        let is_on_ground =
+            world.collide_check(duck.actor, world.actor_pos(duck.actor) + vec2(0.0, 1.0));
         Self {
             duck,
             world,
             frame_time: Duration::from_secs_f32(get_frame_time()),
+            is_on_ground,
         }
     }
 
@@ -102,8 +106,7 @@ impl<'a> DuckUpdateAction<'a> {
     }
 
     fn is_on_ground(&self) -> bool {
-        let actor_pos = self.world.actor_pos(self.duck.actor) + vec2(0.0, 1.0);
-        self.world.collide_check(self.duck.actor, actor_pos) && !self.is_moving_up()
+        self.is_on_ground && !self.is_moving_up()
     }
 
     fn is_moving_up(&self) -> bool {

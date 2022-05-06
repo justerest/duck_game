@@ -18,11 +18,31 @@ impl TiledMap {
         Self { source }
     }
 
-    pub fn draw_all_layers(&self) {
-        let size = self.size();
+    pub fn draw_all_layers(&self, dest: Rect) {
+        let spr_width = self.raw_tiled_map.tilewidth as f32;
+        let spr_height = self.raw_tiled_map.tileheight as f32;
+        let source = Rect::new(
+            (dest.x / self.raw_tiled_map.tilewidth as f32).floor(),
+            (dest.y / self.raw_tiled_map.tileheight as f32).floor(),
+            (dest.w / self.raw_tiled_map.tilewidth as f32).ceil(),
+            (dest.h / self.raw_tiled_map.tileheight as f32).ceil(),
+        );
+
         for layer in self.raw_tiled_map.layers.iter() {
-            self.source
-                .draw_tiles(&layer.name, Rect::new(0.0, 0.0, size.x, size.y), None);
+            let layer = &self.layers[&layer.name];
+            for x in source.left() as u32..=source.right() as u32 {
+                for y in source.top() as u32..=source.bottom() as u32 {
+                    let spr_index = (y * layer.width + x) as usize;
+                    if let Some(tile) = layer.data.get(spr_index).and_then(Option::as_ref) {
+                        let pos = vec2(x as f32 * spr_width, y as f32 * spr_height);
+                        self.spr(
+                            &tile.tileset,
+                            tile.id,
+                            Rect::new(pos.x, pos.y, spr_width, spr_height),
+                        );
+                    }
+                }
+            }
         }
     }
 

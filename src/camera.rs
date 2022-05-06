@@ -38,6 +38,7 @@ impl FollowBuffer {
 pub struct Camera {
     map_size: Vec2,
     viewport_size: Vec2,
+    viewport: Rect,
     x_follow_buffer: FollowBuffer,
     y_follow_buffer: FollowBuffer,
     hero_pos: Vec2,
@@ -51,6 +52,7 @@ impl Camera {
             x_follow_buffer: FollowBuffer::new(FOLLOW_X_BUFFER_CAPACITY),
             y_follow_buffer: FollowBuffer::new(FOLLOW_Y_BUFFER_CAPACITY),
             hero_pos: Vec2::ZERO,
+            viewport: Default::default(),
         }
     }
 
@@ -60,13 +62,18 @@ impl Camera {
             self.x_follow_buffer.push(pos.x)
         }
         self.y_follow_buffer.push(pos.y);
-    }
-
-    pub fn focus_on_hero(&self) {
         let x_offset = self.hero_pos.x - self.x_follow_buffer.mean();
         let y_offset = (self.y_follow_buffer.mean() - self.hero_pos.y) / 2.;
         let res = self.hero_pos + vec2(x_offset, y_offset);
-        set_camera(&Camera2D::from_display_rect(self.bound(res)));
+        self.viewport = self.bound(res);
+    }
+
+    pub fn focus_on_hero(&self) {
+        set_camera(&Camera2D::from_display_rect(self.viewport));
+    }
+
+    pub fn viewport(&self) -> Rect {
+        self.viewport
     }
 
     fn bound(&self, point: Vec2) -> Rect {
