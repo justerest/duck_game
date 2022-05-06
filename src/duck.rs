@@ -16,54 +16,51 @@ pub const MOVE_ACCELERATION: Acceleration = Acceleration::from_meters_on_second_
 pub const MOVE_DECELERATION: Acceleration = Acceleration::from_meters_on_second_on_second(6.0);
 
 #[derive(PartialEq)]
-enum Direction {
+enum HorizontalDirection {
     Left,
     Right,
 }
 
 pub struct Duck {
     texture: Texture2D,
-    collider: Actor,
+    actor: Actor,
     velocity: XY<Velocity>,
-    dir: Direction,
+    direction_h: HorizontalDirection,
 }
 
 impl Duck {
     pub fn create(texture: Texture2D, world: &mut World, init_pos: Vec2) -> Self {
         Self {
             texture,
-            collider: world.add_actor(init_pos, texture.width() as i32, texture.height() as i32),
+            actor: world.add_actor(init_pos, texture.width() as _, texture.height() as _),
             velocity: Default::default(),
-            dir: Direction::Right,
+            direction_h: HorizontalDirection::Right,
         }
     }
 
     pub fn draw(&self, world: &World) {
         let pos = self.pos(world);
+        let width = self.texture.width();
+        let height = self.texture.height();
         draw_texture_ex(
             self.texture,
             pos.x,
             pos.y,
             WHITE,
             DrawTextureParams {
-                source: Some(Rect::new(
-                    0.0,
-                    0.0,
-                    self.texture.width() as _,
-                    self.texture.height() as _,
-                )),
-                flip_x: self.dir == Direction::Left,
+                source: Some(Rect::new(0.0, 0.0, width as _, height as _)),
+                flip_x: self.direction_h == HorizontalDirection::Left,
                 ..Default::default()
             },
         );
     }
 
     pub fn pos(&self, world: &World) -> Vec2 {
-        world.actor_pos(self.collider)
+        world.actor_pos(self.actor)
     }
 
     pub fn center(&self, world: &World) -> Vec2 {
-        self.pos(world) + vec2(self.texture.width() / 2., 0.)
+        self.pos(world) + vec2(self.texture.width() / 2.0, 0.0)
     }
 
     pub fn update(&mut self, world: &mut World) {
@@ -105,8 +102,8 @@ impl<'a> DuckUpdateAction<'a> {
     }
 
     fn is_on_ground(&self) -> bool {
-        let actor_pos = self.world.actor_pos(self.duck.collider) + vec2(0.0, 1.0);
-        self.world.collide_check(self.duck.collider, actor_pos) && !self.is_moving_up()
+        let actor_pos = self.world.actor_pos(self.duck.actor) + vec2(0.0, 1.0);
+        self.world.collide_check(self.duck.actor, actor_pos) && !self.is_moving_up()
     }
 
     fn is_moving_up(&self) -> bool {
@@ -114,8 +111,8 @@ impl<'a> DuckUpdateAction<'a> {
     }
 
     fn is_top_at_solid(&self) -> bool {
-        let pos = self.world.actor_pos(self.duck.collider) - vec2(0.0, 1.0);
-        self.world.collide_check(self.duck.collider, pos) && self.is_solid_at(pos)
+        let pos = self.world.actor_pos(self.duck.actor) - vec2(0.0, 1.0);
+        self.world.collide_check(self.duck.actor, pos) && self.is_solid_at(pos)
     }
 
     fn is_solid_at(&self, pos: Vec2) -> bool {
@@ -128,11 +125,11 @@ impl<'a> DuckUpdateAction<'a> {
         if is_key_down(KeyCode::Right) {
             let dv = MOVE_ACCELERATION * self.frame_time;
             self.duck.velocity.x = (self.duck.velocity.x + dv).min(MAX_MOVE_VELOCITY);
-            self.duck.dir = Direction::Right;
+            self.duck.direction_h = HorizontalDirection::Right;
         } else if is_key_down(KeyCode::Left) {
             let dv = MOVE_ACCELERATION * self.frame_time;
             self.duck.velocity.x = (self.duck.velocity.x - dv).max(-MAX_MOVE_VELOCITY);
-            self.duck.dir = Direction::Left;
+            self.duck.direction_h = HorizontalDirection::Left;
         } else {
             let dv = MOVE_DECELERATION * self.frame_time;
             self.duck.velocity.x = self.duck.velocity.x.signum()
@@ -142,7 +139,7 @@ impl<'a> DuckUpdateAction<'a> {
 
     fn handle_jump(&mut self) {
         if self.is_descent() {
-            self.world.descent(self.duck.collider);
+            self.world.descent(self.duck.actor);
             self.duck.velocity.y = 2.0 * GRAVITY_ACCELERATION * self.frame_time;
         } else if self.is_jump_start() {
             self.duck.velocity.y = -jump_velocity();
@@ -172,8 +169,8 @@ impl<'a> DuckUpdateAction<'a> {
     fn update_position(&mut self) {
         let dx = self.duck.velocity.x * self.frame_time;
         let dy = self.duck.velocity.y * self.frame_time;
-        self.world.move_h(self.duck.collider, dx.as_cm());
-        self.world.move_v(self.duck.collider, dy.as_cm());
+        self.world.move_h(self.duck.actor, dx.as_cm());
+        self.world.move_v(self.duck.actor, dy.as_cm());
     }
 }
 
