@@ -9,7 +9,7 @@ pub const MAX_JUMP_HEIGHT: Length = Length::from_meters(1.6);
 pub const HOVER_VELOCITY: Velocity = Velocity::from_meters_on_second(1.6);
 pub const GRAVITY_ACCELERATION: Acceleration =
     Acceleration::from_meters_on_second_on_second(2.0 * EARTH_G.as_meters_on_second_on_second());
-pub const ADDITIONAL_GRAVITY_ACCELERATION: Acceleration = EARTH_G;
+pub const ADDITIONAL_GRAVITY_ACCELERATION: Acceleration = GRAVITY_ACCELERATION;
 pub const MAX_FALL_VELOCITY: Velocity = Velocity::from_meters_on_second(10.0);
 pub const MAX_MOVE_VELOCITY: Velocity = Velocity::from_meters_on_second(3.2);
 pub const MOVE_ACCELERATION: Acceleration = Acceleration::from_meters_on_second_on_second(12.0);
@@ -77,14 +77,19 @@ struct DuckUpdateAction<'a> {
 
 impl<'a> DuckUpdateAction<'a> {
     fn new(duck: &'a mut Duck, world: &'a mut World) -> Self {
-        let is_on_ground =
-            world.collide_check(duck.actor, world.actor_pos(duck.actor) + vec2(0.0, 1.0));
-        Self {
+        let mut duck_update_action = Self {
             duck,
             world,
             frame_time: Duration::from_secs_f32(get_frame_time()),
-            is_on_ground,
-        }
+            is_on_ground: Default::default(),
+        };
+        duck_update_action.init();
+        duck_update_action
+    }
+
+    fn init(&mut self) {
+        let pos = self.world.actor_pos(self.duck.actor) + vec2(0.0, 1.0);
+        self.is_on_ground = self.world.collide_check(self.duck.actor, pos)
     }
 
     pub fn apply(mut self) {

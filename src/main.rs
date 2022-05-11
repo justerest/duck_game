@@ -18,7 +18,7 @@ mod tile_layers {
     pub const BARRIERS: &str = "Tile Layer 3";
 }
 
-const VIEWPORT_HEIGHT: f32 = 640.;
+const VIEWPORT_HEIGHT: f32 = 640.0;
 
 async fn load_tiled_map() -> Map {
     let tiled_map_json = load_string("assets/map.json").await.unwrap();
@@ -47,7 +47,7 @@ async fn main() {
     let viewport_size = vec2(aspect_ratio * VIEWPORT_HEIGHT, VIEWPORT_HEIGHT);
 
     let mut world = DuckWorld::new(tiled_map);
-    let mut duck = Duck::create(duck_texture, &mut world, vec2(50., map_size.y - 150.));
+    let mut duck = Duck::create(duck_texture, &mut world, vec2(50_f32, map_size.y - 150_f32));
     let mut camera = Camera::new(map_size, viewport_size);
 
     world.add_static_colliders(tile_layers::BORDERS, Tile::Solid);
