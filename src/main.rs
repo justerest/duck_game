@@ -2,11 +2,13 @@ use macroquad::prelude::*;
 use macroquad_platformer::*;
 use macroquad_tiled::Map;
 
+use crate::assets_server::AssetsServer;
 use crate::camera::Camera;
 use crate::duck::Duck;
 use crate::duck_world::DuckWorld;
 use crate::tiled_map::TiledMap;
 
+mod assets_server;
 mod camera;
 mod duck;
 mod duck_world;
@@ -20,27 +22,12 @@ mod tile_layers {
 
 const VIEWPORT_HEIGHT: f32 = 640.0;
 
-async fn load_tiled_map() -> Map {
-    let tiled_map_json = load_string("assets/map.json").await.unwrap();
-    let tileset_json = load_string("assets/tmw_desert_spacing.json").await.unwrap();
-    let tileset_png = load_texture("assets/tmw_desert_spacing.png").await.unwrap();
-
-    macroquad_tiled::load_map(
-        &tiled_map_json,
-        &[("tmw_desert_spacing.png", tileset_png)],
-        &[("tmw_desert_spacing.json", &tileset_json)],
-    )
-    .unwrap()
-}
-
-async fn load_duck_texture() -> Texture2D {
-    load_texture("assets/duck.png").await.unwrap()
-}
-
 #[macroquad::main("Уточка")]
 async fn main() {
-    let tiled_map = TiledMap::new(load_tiled_map().await);
-    let duck_texture = load_duck_texture().await;
+    let assets_server = AssetsServer::new("assets");
+
+    let tiled_map = TiledMap::new(load_tiled_map(&assets_server).await);
+    let duck_texture = load_duck_texture(&assets_server).await;
 
     let map_size = tiled_map.size();
     let aspect_ratio = screen_width() / screen_height();
@@ -58,16 +45,38 @@ async fn main() {
             return;
         }
 
-        clear_background(BLACK);
-
         duck.update(&mut world);
-
         camera.add_hero_pos(duck.center(&world));
-        camera.focus_on_hero();
 
         world.draw(camera.viewport());
         duck.draw(&world);
+        camera.focus_on_hero();
 
         next_frame().await;
     }
+}
+
+async fn load_tiled_map(assets_server: &AssetsServer) -> Map {
+    let tiled_map_json = assets_server.load_string("map.json").await.unwrap();
+
+    let tileset_json = assets_server
+        .load_string("tmw_desert_spacing.json")
+        .await
+        .unwrap();
+
+    let tileset_png = assets_server
+        .load_texture("tmw_desert_spacing.png")
+        .await
+        .unwrap();
+
+    macroquad_tiled::load_map(
+        &tiled_map_json,
+        &[("tmw_desert_spacing.png", tileset_png)],
+        &[("tmw_desert_spacing.json", &tileset_json)],
+    )
+    .unwrap()
+}
+
+async fn load_duck_texture(assets_server: &AssetsServer) -> Texture2D {
+    assets_server.load_texture("duck.png").await.unwrap()
 }
