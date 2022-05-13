@@ -22,7 +22,7 @@ mod tile_layers {
     pub const BARRIERS: &str = "Tile Layer 3";
 }
 
-const VIEWPORT_HEIGHT: f32 = 640.0;
+const VIEWPORT_HEIGHT: f32 = 720.0;
 
 #[macroquad::main("Уточка")]
 async fn main() {

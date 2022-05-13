@@ -19,15 +19,15 @@ impl TiledMap {
     }
 
     pub fn draw_all_layers_at_viewport(&self, viewport: Rect) {
-        let x_start = (viewport.left() / self.tile_width()).floor() as u32;
-        let x_end = (viewport.right() / self.tile_width()).ceil() as u32;
+        let x_start = (viewport.left() / self.tile_width() - 1.0) as u32;
+        let x_end = (viewport.right() / self.tile_width() + 1.0) as u32;
 
-        let y_start = (viewport.top() / self.tile_height()).floor() as u32;
-        let y_end = (viewport.bottom() / self.tile_height()).ceil() as u32;
+        let y_start = (viewport.top() / self.tile_height() - 1.0) as u32;
+        let y_end = (viewport.bottom() / self.tile_height() + 1.0) as u32;
 
         for layer in self.m_map.raw_tiled_map.layers.iter() {
-            for x in x_start..x_end {
-                for y in y_start..y_end {
+            for x in x_start..=x_end {
+                for y in y_start..=y_end {
                     self.draw_tile(&layer.name, x, y);
                 }
             }

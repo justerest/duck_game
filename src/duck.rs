@@ -9,7 +9,6 @@ pub const MAX_JUMP_HEIGHT: Length = Length::from_meters(1.6);
 pub const HOVER_VELOCITY: Velocity = Velocity::from_meters_on_second(1.6);
 pub const GRAVITY_ACCELERATION: Acceleration =
     Acceleration::from_meters_on_second_on_second(2.0 * EARTH_G.as_meters_on_second_on_second());
-pub const ADDITIONAL_GRAVITY_ACCELERATION: Acceleration = GRAVITY_ACCELERATION;
 pub const MAX_FALL_VELOCITY: Velocity = Velocity::from_meters_on_second(10.0);
 pub const MAX_MOVE_VELOCITY: Velocity = Velocity::from_meters_on_second(3.2);
 pub const MOVE_ACCELERATION: Acceleration = Acceleration::from_meters_on_second_on_second(12.0);
@@ -152,7 +151,7 @@ impl<'a> DuckUpdateAction<'a> {
         } else if self.is_jump_start() {
             self.duck.velocity.y = -jump_velocity();
         } else if self.is_jump_end() {
-            self.duck.velocity.y += ADDITIONAL_GRAVITY_ACCELERATION * self.frame_time;
+            self.duck.velocity.y += GRAVITY_ACCELERATION * self.frame_time;
         } else if self.is_hover() {
             self.duck.velocity.y = self.duck.velocity.y.min(HOVER_VELOCITY);
         }
