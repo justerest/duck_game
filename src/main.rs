@@ -6,12 +6,14 @@ use crate::assets_server::AssetsServer;
 use crate::camera::Camera;
 use crate::duck::Duck;
 use crate::duck_world::DuckWorld;
+use crate::input_service::InputService;
 use crate::tiled_map::TiledMap;
 
 mod assets_server;
 mod camera;
 mod duck;
 mod duck_world;
+mod input_service;
 mod physics;
 mod tiled_map;
 
@@ -25,6 +27,7 @@ const VIEWPORT_HEIGHT: f32 = 640.0;
 #[macroquad::main("Уточка")]
 async fn main() {
     let assets_server = AssetsServer::new("assets");
+    let input_service = InputService;
 
     let tiled_map = TiledMap::new(load_tiled_map(&assets_server).await);
     let duck_texture = load_duck_texture(&assets_server).await;
@@ -41,7 +44,7 @@ async fn main() {
     world.add_static_colliders(tile_layers::BARRIERS, Tile::JumpThrough);
 
     loop {
-        if is_key_pressed(KeyCode::Escape) {
+        if input_service.is_key_pressed(KeyCode::Escape) {
             return;
         }
 
