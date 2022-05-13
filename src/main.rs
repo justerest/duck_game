@@ -8,6 +8,7 @@ use crate::duck::Duck;
 use crate::duck_world::DuckWorld;
 use crate::input_service::InputService;
 use crate::tiled_map::TiledMap;
+use crate::time::Time;
 
 mod assets_server;
 mod camera;
@@ -16,6 +17,7 @@ mod duck_world;
 mod input_service;
 mod physics;
 mod tiled_map;
+mod time;
 
 mod tile_layers {
     pub const BORDERS: &str = "Tile Layer 2";
@@ -27,7 +29,8 @@ const VIEWPORT_HEIGHT: f32 = 720.0;
 #[macroquad::main("Уточка")]
 async fn main() {
     let assets_server = AssetsServer::new("assets");
-    let input_service = InputService;
+    let input_service = InputService::new();
+    let mut time = Time::new();
 
     let tiled_map = TiledMap::new(load_tiled_map(&assets_server).await);
     let duck_texture = load_duck_texture(&assets_server).await;
@@ -56,6 +59,7 @@ async fn main() {
         camera.focus();
 
         next_frame().await;
+        time.tick();
     }
 }
 
