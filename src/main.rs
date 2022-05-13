@@ -49,11 +49,11 @@ async fn main() {
         }
 
         duck.update(&mut world);
-        camera.add_hero_pos(duck.center(&world));
+        camera.update(duck.center(&world));
 
         world.draw(camera.viewport());
         duck.draw(&world);
-        camera.focus_on_hero();
+        camera.focus();
 
         next_frame().await;
     }
