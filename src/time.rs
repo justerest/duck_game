@@ -14,6 +14,7 @@ impl Time {
         }
     }
 
+    #[allow(unused)]
     pub fn frame_delta(&self) -> Duration {
         self.frame_delta
     }

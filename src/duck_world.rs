@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use macroquad::prelude::Rect;
 use macroquad_platformer::{Tile, World};
 
@@ -5,7 +7,7 @@ use crate::tiled_map::TiledMap;
 
 pub struct DuckWorld {
     source: World,
-    map: TiledMap,
+    map: Rc<TiledMap>,
 }
 
 impl std::ops::Deref for DuckWorld {
@@ -23,7 +25,7 @@ impl std::ops::DerefMut for DuckWorld {
 }
 
 impl DuckWorld {
-    pub fn new(map: TiledMap) -> Self {
+    pub fn new(map: Rc<TiledMap>) -> Self {
         Self {
             source: World::new(),
             map,
