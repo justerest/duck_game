@@ -7,7 +7,7 @@ use crate::tiled_map::TiledMap;
 
 pub struct DuckWorld {
     source: World,
-    map: Rc<TiledMap>,
+    map: TiledMap,
 }
 
 impl std::ops::Deref for DuckWorld {
@@ -25,7 +25,7 @@ impl std::ops::DerefMut for DuckWorld {
 }
 
 impl DuckWorld {
-    pub fn new(map: Rc<TiledMap>) -> Self {
+    pub fn new(map: TiledMap) -> Self {
         Self {
             source: World::new(),
             map,
